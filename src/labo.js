@@ -1,10 +1,12 @@
-import { Color3, MeshBuilder, PhysicsAggregate, PhysicsMotionType, PhysicsShapeType, PointLight, SceneLoader, ShadowGenerator, StandardMaterial, Texture, Tools, TransformNode, Vector3 } from "@babylonjs/core";
+import { Color3, ImportMeshAsync, MeshBuilder, PhysicsAggregate, PhysicsMotionType, PhysicsShapeType, PointLight, SceneLoader, ShadowGenerator, StandardMaterial, Texture, Tools, TransformNode, Vector3 } from "@babylonjs/core";
 import { GlobalManager } from "./GlobalManager";
 import floorLabo from "../assets/texture/gris.png";
 import doorMesh from "../assets/models/lab_door.glb";
-import blackWindow from "../assets/models/black_window.glb";
-import labLight from "../assets/models/labo_light.glb";
-import labLightSwitch from "../assets/models/light_switch.glb";
+import blackWindowMesh from "../assets/models/black_window.glb";
+import labLightMesh from "../assets/models/labo_light.glb";
+import labLightSwitchMesh from "../assets/models/light_switch.glb";
+import labFurnitureMesh from "../assets/models/lab_furniture.glb";
+import spaceGateMesh from "../assets/models/space_gate.glb";
 
 const GROUND_WIDTH = 10;
 const GROUND_HEIGHT = 0.1;
@@ -81,48 +83,31 @@ class Labo {
         const door = resultDoor.meshes[0];
         door.scaling = new Vector3(3.2, 2.2, 2.2);
         door.position = new Vector3((this.x-GROUND_WIDTH/2)+1, this.y, this.z-4.7);
-
-        for(let meshDoor of resultDoor.meshes){
-            meshDoor.refreshBoundingInfo(true);
-            if(meshDoor.getTotalVertices() > 0){
-                const meshAggregate =  new PhysicsAggregate(meshDoor, PhysicsShapeType.MESH, {mass:0, friction: 0.4, restitution : 0.1}); 
-                meshAggregate.body.setMotionType(PhysicsMotionType.STATIC);
-                meshDoor.receiveShadows = true;
-            }
-        }
+        GlobalManager.addStaticPhysics(resultDoor.meshes);
 
         //Fenêtre
-        const resultWindow = await SceneLoader.ImportMeshAsync("", "", blackWindow, GlobalManager.scene);
+        const resultWindow = await SceneLoader.ImportMeshAsync("", "", blackWindowMesh, GlobalManager.scene);
         const window = resultWindow.meshes[0];
         window.scaling = new Vector3(0.6, 0.6, 1);
-        window.position = new Vector3(this.x-2, this.y+1.7, (this.z-GROUND_DEPTH/2)+0.5);
-
+        window.position = new Vector3(this.x-0.5, this.y+1.7, (this.z-GROUND_DEPTH/2)+0.5);
         //Création d'un parent pour pouvoir pivoter le Mesh
         const windowParent = new TransformNode("windowParent", GlobalManager.scene);
         for (let mesh of resultWindow.meshes) {
             mesh.setParent(windowParent);
         }
         windowParent.rotation.y = Tools.ToRadians(90);
-
-        for (let meshWindow of resultWindow.meshes){
-            meshWindow.refreshBoundingInfo(true);
-            if(meshWindow.getTotalVertices() > 0){
-                const meshAggregate = new PhysicsAggregate(meshWindow, PhysicsShapeType.MESH, {mass: 0, friction: 0.1, restitution: 0.1});
-                meshAggregate.body.setMotionType(PhysicsMotionType.STATIC);
-                meshWindow.receiveShadows = true;
-            }
-        }
+        GlobalManager.addStaticPhysics(resultWindow.meshes);
 
         //Lustre
-        const resultLight = await SceneLoader.ImportMeshAsync("", "", labLight, GlobalManager.scene);
-        const light = resultLight.meshes[0];
-        light.position = new Vector3(this.x, this.y+2.8, this.z);
-        light.scaling = new Vector3(0.1, 0.1, 0.1);
+        const resultLight = await SceneLoader.ImportMeshAsync("", "", labLightMesh, GlobalManager.scene);
+        const labLight = resultLight.meshes[0];
+        labLight.position = new Vector3(this.x, this.y+2.8, this.z);
+        labLight.scaling = new Vector3(0.1, 0.1, 0.1);
         //Lumière
         const lustreLight = new PointLight("lustreLight", Vector3.Zero(), GlobalManager.scene);
         lustreLight.intensity = 0.5;
         lustreLight.range = 10
-        lustreLight.parent = light;
+        lustreLight.parent = labLight;
         //Ombres
         const shadowGeneratorLustre = new ShadowGenerator(1024, lustreLight);
         shadowGeneratorLustre.usePercentageCloserFiltering = true;
@@ -130,17 +115,37 @@ class Labo {
         GlobalManager.addShadowGenerator(shadowGeneratorLustre);
 
         //Interrupteur lumière
-        const resultSwitch = await SceneLoader.ImportMeshAsync("", "", labLightSwitch, GlobalManager.scene);
-        const switchLight = resultSwitch.meshes[0];
-        switchLight.position = new Vector3(this.x-2.2, this.y+1.2, (this.z-GROUND_WIDTH/2)+0.1);
-        switchLight.scaling = new Vector3(0.5, 0.5, 0.5);
+        const resultSwitch = await SceneLoader.ImportMeshAsync("", "", labLightSwitchMesh, GlobalManager.scene);
+        const lightSwitch = resultSwitch.meshes[0];
+        lightSwitch.position = new Vector3(this.x-2.2, this.y+1.2, (this.z-GROUND_WIDTH/2)+0.1);
+        lightSwitch.scaling = new Vector3(0.5, 0.5, 0.5);
+        
+        //Meuble
+        const resultFurniture = await SceneLoader.ImportMeshAsync("", "", labFurnitureMesh, GlobalManager.scene);
+        const furniture = resultFurniture.meshes[0];
+        furniture.position = new Vector3(this.x-1, this.y+0.6, (this.z-GROUND_WIDTH/2)+1);
+        furniture.scaling = new Vector3(1.2, 1.2, -1.2);
         //Création d'un parent pour pouvoir pivoter le Mesh
-        // const switchParent = new TransformNode("switchParent", GlobalManager.scene);
-        // for (let mesh of resultSwitch.meshes) {
-        //     mesh.setParent(switchParent);
-        // }
-        // switchParent.rotation.y = Tools.ToRadians(180);
+        const furnitureParent = new TransformNode("furnitureParent", GlobalManager.scene);
+        for (let mesh of resultFurniture.meshes) {
+            mesh.setParent(furnitureParent);
+        }
+        furnitureParent.rotation.y = Tools.ToRadians(-15);
+        furnitureParent.rotation.z = Tools.ToRadians(-2.5);
+        GlobalManager.addStaticPhysics(resultFurniture.meshes);
 
+        //Téléporteur
+        const resultSpaceGate = await SceneLoader.ImportMeshAsync("", "", spaceGateMesh, GlobalManager.scene);
+        const spaceGate = resultSpaceGate.meshes[0];
+        spaceGate.position = new Vector3(this.x-4.6, this.y+1.6, this.z-2);
+        spaceGate.scaling = new Vector3(3.5, 3.5, -3.5);
+        //Création d'un parent pour pouvoir pivoter le Mesh
+        const spaceGateParent = new TransformNode("spaceGateParent", GlobalManager.scene);
+        for (let mesh of resultSpaceGate.meshes) {
+            mesh.setParent(spaceGateParent);
+        }
+        spaceGateParent.rotation.y = Tools.ToRadians(70);
+        GlobalManager.addStaticPhysics(resultSpaceGate.meshes);
     }
 
 }

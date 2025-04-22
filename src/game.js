@@ -42,22 +42,15 @@ class Game {
         //Camera
         this.#gameCamera = new FreeCamera("freeCamera", new Vector3(5, 4, 5), GlobalManager.scene);
         this.#gameCamera.setTarget(Vector3.Zero());
-        this.#gameCamera.attachControl(GlobalManager.canvas, true);
 
         //Light
         const light = new HemisphericLight("hemisphericLight", new Vector3(0, 1, 0), GlobalManager.scene);
-        light.intensity = 0.3;
+        light.intensity = 0.5;
 
         //Ground
-        const ground = MeshBuilder.CreateGround("ground", { width: 640, height: 640, subdivisions: 512 }, GlobalManager.scene);
+        const ground = MeshBuilder.CreateGround("ground", { width: 20, height: 20}, GlobalManager.scene);
         ground.position = new Vector3(0, -0.1, 0);
-        const matGround = new StandardMaterial("labo", GlobalManager.scene);
-        //matGround.diffuseColor = new Color3(1, 0.4, 0);
-        matGround.diffuseTexture = new Texture(floorLabo);
-        matGround.diffuseTexture.uScale = 256;
-        matGround.diffuseTexture.vScale = 256;
-        ground.material = matGround;
-        ground.receiveShadows = true;
+        
 
 
         const groundAggregate = new PhysicsAggregate(ground, PhysicsShapeType.BOX, { mass: 0, friction: 0.7, restitution: 0.2 }, GlobalManager.scene);
