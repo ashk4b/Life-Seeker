@@ -27,10 +27,12 @@ class GlobalManager {
         this.shadowGenerators.push(shad);
     }
 
-    addShadowCaster(objects, bChilds) {
-        bChilds = bChilds || false;
-        for(let shad of this.shadowGenerators){
-            shad.addShadowCaster(objects, bChilds)
+    addShadowCaster(objects, bChilds = false) {
+        if (!Array.isArray(objects)) objects = [objects];
+        for (let shad of this.shadowGenerators) {
+            for (let obj of objects) {
+                shad.addShadowCaster(obj, bChilds);
+            }
         }
     }
 
@@ -41,6 +43,7 @@ class GlobalManager {
                 const meshAggregate = new PhysicsAggregate(mesh, PhysicsShapeType.MESH, {mass: 0, friction: 0.5, restitution: 0.1});
                 meshAggregate.body.setMotionType(PhysicsMotionType.STATIC);
                 mesh.receiveShadows = true;
+                this.addShadowCaster(mesh);
             }
         }
     }

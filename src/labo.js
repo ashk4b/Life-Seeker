@@ -7,6 +7,8 @@ import labLightMesh from "../assets/models/labo_light.glb";
 import labLightSwitchMesh from "../assets/models/light_switch.glb";
 import labFurnitureMesh from "../assets/models/lab_furniture.glb";
 import spaceGateMesh from "../assets/models/space_gate.glb";
+import chemistryDeskMesh from "../assets/models/chemistry_desk.glb";
+import messageBoard from "../assets/models/message_board.glb";
 
 const GROUND_WIDTH = 10;
 const GROUND_HEIGHT = 0.1;
@@ -146,6 +148,32 @@ class Labo {
         }
         spaceGateParent.rotation.y = Tools.ToRadians(70);
         GlobalManager.addStaticPhysics(resultSpaceGate.meshes);
+
+        //Table de chimie
+        const resultChemistryDesk = await SceneLoader.ImportMeshAsync("", "", chemistryDeskMesh, GlobalManager.scene);
+        const chemistryDesk = resultChemistryDesk.meshes[0];
+        chemistryDesk.position = new Vector3(this.x-4, this.y+1.2, (this.z-GROUND_WIDTH/2)+2.1);
+        chemistryDesk.scaling = new Vector3(1, 1, 1);
+        //Création d'un parent pour pouvoir pivoter le Mesh
+        const chemistryDeskParent = new TransformNode("chemistryDeskParent", GlobalManager.scene);
+        for (let mesh of resultChemistryDesk.meshes) {
+            mesh.setParent(chemistryDeskParent);
+        }
+        chemistryDeskParent.rotation.y = Tools.ToRadians(-85);
+        chemistryDeskParent.rotation.z = Tools.ToRadians(1);
+        GlobalManager.addStaticPhysics(resultChemistryDesk.meshes);
+
+        //Tableau
+        const resultBoard = await SceneLoader.ImportMeshAsync("", "", messageBoard, GlobalManager.scene);
+        const board = resultBoard.meshes[0];
+        board.position = new Vector3(this.x+4.8, this.y+1, this.z+1.8);
+        board.scaling = new Vector3(0.015, 0.015, 0.017);
+        //Création d'un parent pour pouvoir pivoter le Mesh
+        const boardParent = new TransformNode("cboardParent", GlobalManager.scene);
+        for (let mesh of resultBoard.meshes) {
+            mesh.setParent(boardParent);
+        }
+        boardParent.rotation.y = Tools.ToRadians(180);
     }
 
 }
