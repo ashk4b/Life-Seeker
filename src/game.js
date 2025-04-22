@@ -1,4 +1,4 @@
-import { ActionManager, Color3, Color4, FollowCamera, FreeCamera, HavokPlugin, HemisphericLight, InterpolateValueAction, KeyboardEventTypes, Mesh, MeshBuilder, ParticleSystem, PhysicsAggregate, PhysicsMotionType, PhysicsShapeType, Scene, SetValueAction, ShadowGenerator, SpotLight, StandardMaterial, Texture, Vector3 } from "@babylonjs/core";
+import { ActionManager, ArcRotateCamera, Color3, Color4, FollowCamera, FreeCamera, HavokPlugin, HemisphericLight, InterpolateValueAction, KeyboardEventTypes, Mesh, MeshBuilder, ParticleSystem, PhysicsAggregate, PhysicsMotionType, PhysicsShapeType, PointLight, Scene, SetValueAction, ShadowGenerator, SpotLight, StandardMaterial, Texture, Tools, Vector3 } from "@babylonjs/core";
 import { Inspector } from '@babylonjs/inspector';
 import HavokPhysics from "@babylonjs/havok";
 import Player from "./player.js";
@@ -6,6 +6,7 @@ import { GlobalManager } from "./GlobalManager";
 import { InputController } from "./InputController";
 
 import floorLabo from "../assets/texture/gris.png";
+import Labo from "./labo.js";
 
 class Game {
 
@@ -19,8 +20,7 @@ class Game {
     #vitesseY = 1.8;
 
     #player;
-
-    
+    #labo;
 
     constructor(canvas, engine) {
         this.#canvas = canvas;
@@ -35,31 +35,21 @@ class Game {
     }
 
     createScene() {
-        
-
         //Havok plugin
         const hk = new HavokPlugin(true, this.#havokInstance);
         GlobalManager.scene.enablePhysics(new Vector3(0, -9.8, 0), hk);
 
         //Camera
-        this.#gameCamera = new FollowCamera("followCamera", new Vector3(0, 0, 0), GlobalManager.scene);
-        this.#gameCamera.heightOffset = 2;
-        this.#gameCamera.radius = -8;
-        this.#gameCamera.maxCameraSpeed = 1;
-        this.#gameCamera.cameraAcceleration = 0.025;
-        this.#gameCamera.rotationOffset = 0;
-        //this.#gameCamera.setTarget(Vector3.Zero()); 
-       //this.#gameCamera.attachControl(this.#canvas, true); 
+        this.#gameCamera = new FreeCamera("freeCamera", new Vector3(5, 4, 5), GlobalManager.scene);
+        this.#gameCamera.setTarget(Vector3.Zero());
+        this.#gameCamera.attachControl(GlobalManager.canvas, true);
 
         //Light
-        const light = new HemisphericLight("light", new Vector3(0, 1, 0), GlobalManager.scene);
-        light.intensity = 0.4;
-        light.diffuse = new Color3(.5, .5, .7);
-        light.specular = new Color3(1, 1, 1);
-        light.groundColor = new Color3(.7, .7, .9);
+        const light = new HemisphericLight("hemisphericLight", new Vector3(0, 1, 0), GlobalManager.scene);
+        light.intensity = 0.3;
 
         //Ground
-        const ground = MeshBuilder.CreateGround("ground", { width: 640, height: 640, subdivisions: 512}, GlobalManager.scene);
+        const ground = MeshBuilder.CreateGround("ground", { width: 640, height: 640, subdivisions: 512 }, GlobalManager.scene);
         ground.position = new Vector3(0, -0.1, 0);
         const matGround = new StandardMaterial("labo", GlobalManager.scene);
         //matGround.diffuseColor = new Color3(1, 0.4, 0);
@@ -69,28 +59,30 @@ class Game {
         ground.material = matGround;
         ground.receiveShadows = true;
 
-        const groundAggregate = new PhysicsAggregate(ground, PhysicsShapeType.BOX, {mass:0, friction: 0.7, restitution: 0.2}, GlobalManager.scene);
+
+        const groundAggregate = new PhysicsAggregate(ground, PhysicsShapeType.BOX, { mass: 0, friction: 0.7, restitution: 0.2 }, GlobalManager.scene);
 
     }
 
-    async getInitializedHavok(){
+    async getInitializedHavok() {
         return await HavokPhysics();
     }
 
     async initGame() {
         this.#havokInstance = await this.getInitializedHavok();
-        
+
         GlobalManager.scene = new Scene(this.#engine);
         GlobalManager.scene.collisionsEnabled = true;
         InputController.init();
         this.createScene();
 
-        this.#player = new Player(3, 10, 3);
+        this.#labo = new Labo(0, 0, 0);
+        await this.#labo.init();
+
+        this.#player = new Player(0, 0, 0);
         await this.#player.init();
-        this.#gameCamera.lockedTarget = this.#player.transform;
+        //this.#gameCamera.lockedTarget = this.#player.transform;
         GlobalManager.addShadowCaster(this.#player.gameObject);
-        //this.#castle = new Arena(0, 1, 50);
-        //await this.#castle.init();
     }
 
     endGame() {
