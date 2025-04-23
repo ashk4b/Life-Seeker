@@ -4,8 +4,6 @@ import HavokPhysics from "@babylonjs/havok";
 import Player from "./player.js";
 import { GlobalManager } from "./GlobalManager";
 import { InputController } from "./InputController";
-
-import floorLabo from "../assets/texture/gris.png";
 import Labo from "./labo.js";
 
 class Game {
@@ -50,11 +48,6 @@ class Game {
         //Ground
         const ground = MeshBuilder.CreateGround("ground", { width: 20, height: 20}, GlobalManager.scene);
         ground.position = new Vector3(0, -0.1, 0);
-        
-
-
-        const groundAggregate = new PhysicsAggregate(ground, PhysicsShapeType.BOX, { mass: 0, friction: 0.7, restitution: 0.2 }, GlobalManager.scene);
-
     }
 
     async getInitializedHavok() {
@@ -72,7 +65,7 @@ class Game {
         this.#labo = new Labo(0, 0, 0);
         await this.#labo.init();
 
-        this.#player = new Player(0, 0, 0);
+        this.#player = new Player(-3, 1, -4);
         await this.#player.init();
         //this.#gameCamera.lockedTarget = this.#player.transform;
         GlobalManager.addShadowCaster(this.#player.gameObject);
@@ -113,9 +106,7 @@ class Game {
         this.#player.update(InputController.inputMap, InputController.actions, delta);
 
         //Animation
-        this.#phase += this.#vitesseY * delta;
-
-
+        //this.#phase += this.#vitesseY * delta;
     }
 }
 

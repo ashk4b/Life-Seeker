@@ -9,6 +9,13 @@ import labFurnitureMesh from "../assets/models/lab_furniture.glb";
 import spaceGateMesh from "../assets/models/space_gate.glb";
 import chemistryDeskMesh from "../assets/models/chemistry_desk.glb";
 import messageBoard from "../assets/models/message_board.glb";
+import deskMesh from "../assets/models/desk.glb";
+import trashBinMesh from "../assets/models/trash_bin.glb";
+import bookShelfMesh from "../assets/models/book_shelf.glb";
+import upperCabinMesh from "../assets/models/upper_cabin.glb";
+import scifiSmgMesh from "../assets/models/scifi_smg.glb";
+import tableMesh from "../assets/models/table.glb";
+import mapMesh from "../assets/models/map.glb";
 
 const GROUND_WIDTH = 10;
 const GROUND_HEIGHT = 0.1;
@@ -136,6 +143,21 @@ class Labo {
         furnitureParent.rotation.z = Tools.ToRadians(-2.5);
         GlobalManager.addStaticPhysics(resultFurniture.meshes);
 
+        //Deuxième meuble
+        const resultFurniture2 = await SceneLoader.ImportMeshAsync("", "", labFurnitureMesh, GlobalManager.scene);
+        const furniture2 = resultFurniture2.meshes[0];
+        furniture2.position = new Vector3(this.x-0.7, this.y+0.6, this.z-3.9);
+        furniture2.scaling = new Vector3(1.2, 1.2, -1);
+        //Création d'un parent pour pouvoir pivoter le Mesh
+        const furnitureParent2 = new TransformNode("furnitureParent2", GlobalManager.scene);
+        for (let mesh of resultFurniture2.meshes) {
+            mesh.setParent(furnitureParent2);
+        }
+        furnitureParent2.rotation.y = Tools.ToRadians(-103);
+        furnitureParent2.rotation.z = Tools.ToRadians(-2.5);
+        furnitureParent2.rotation.x = Tools.ToRadians(-3);
+        GlobalManager.addStaticPhysics(resultFurniture2.meshes);
+
         //Téléporteur
         const resultSpaceGate = await SceneLoader.ImportMeshAsync("", "", spaceGateMesh, GlobalManager.scene);
         const spaceGate = resultSpaceGate.meshes[0];
@@ -174,6 +196,71 @@ class Labo {
             mesh.setParent(boardParent);
         }
         boardParent.rotation.y = Tools.ToRadians(180);
+
+        //Bureau
+        const resultDesk = await SceneLoader.ImportMeshAsync("", "", deskMesh, GlobalManager.scene);
+        const desk = resultDesk.meshes[0];
+        desk.position = new Vector3(this.x-2, this.y+0.7, this.z-4.5);
+        desk.scaling = new Vector3(1, 1, 1);
+        //Création d'un parent pour pouvoir pivoter le Mesh
+        const deskParent = new TransformNode("deskParent", GlobalManager.scene);
+        for (let mesh of resultDesk.meshes) {
+            mesh.setParent(deskParent);
+        }
+        deskParent.rotation.y = Tools.ToRadians(-90);
+        GlobalManager.addStaticPhysics(resultDesk.meshes);
+
+        //Poubelle
+        const resultBin = await SceneLoader.ImportMeshAsync("", "", trashBinMesh, GlobalManager.scene);
+        const bin = resultBin.meshes[0];
+        bin.position = new Vector3(this.x+4, this.y, this.z-4.2);
+        bin.scaling = new Vector3(3, 3, -3);
+        GlobalManager.addStaticPhysics(resultBin.meshes);
+
+        //Bibliothèque
+        const resultBookShelf = await SceneLoader.ImportMeshAsync("", "", bookShelfMesh, GlobalManager.scene);
+        const bookShelf = resultBookShelf.meshes[0];
+        bookShelf.position = new Vector3(this.x+1.9, this.y+0.3, this.z-4.7);
+        bookShelf.scaling = new Vector3(2.3, 1.5, 1.5);
+        //Création d'un parent pour pouvoir pivoter le Mesh
+        const bookShelfParent = new TransformNode("bookShelfParent", GlobalManager.scene);
+        for (let mesh of resultBookShelf.meshes) {
+            mesh.setParent(bookShelfParent);
+        }
+        bookShelfParent.rotation.y = Tools.ToRadians(90);
+        GlobalManager.addStaticPhysics(resultBookShelf.meshes);
+
+        //Petit meuble marron
+        const resultUpperCabin = await SceneLoader.ImportMeshAsync("", "",  upperCabinMesh, GlobalManager.scene);
+        const upperCabin = resultUpperCabin.meshes[0];
+        upperCabin.position = new Vector3(this.x+1, this.y+0.5, this.z+4.7);
+        upperCabin.scaling = new Vector3(2, 1.5, 1.8);
+        GlobalManager.addStaticPhysics(resultUpperCabin.meshes);
+
+        //SMG
+        const resultScifiSmg = await SceneLoader.ImportMeshAsync("", "", scifiSmgMesh, GlobalManager.scene);
+        const smg = resultScifiSmg.meshes[0];
+        smg.position = new Vector3(this.x+0.9, this.y+4.6, this.z-1.1);
+        smg.scaling = new Vector3(0.5, 0.5, 0.5);
+        //Création d'un parent pour pouvoir pivoter le Mesh
+        const smgParent = new TransformNode("smgParent", GlobalManager.scene);
+        for (let mesh of resultScifiSmg.meshes) {
+            mesh.setParent(smgParent);
+        }
+        smgParent.rotation.x = Tools.ToRadians(90);
+
+        //Table au milieu
+        const resultTable = await SceneLoader.ImportMeshAsync("", "", tableMesh, GlobalManager.scene);
+        const table = resultTable.meshes[0];
+        table.position = new Vector3(this.x, this.y, this.z);
+        table.scaling = new Vector3(0.15, 0.12, 0.15);
+        GlobalManager.addStaticPhysics(resultTable.meshes);
+
+        //Carte
+        const resultMap = await SceneLoader.ImportMeshAsync("", "", mapMesh, GlobalManager.scene);
+        const map = resultMap.meshes[0];
+        map.position = new Vector3(this.x, this.y+0.95, this.z);
+        map.scaling = new Vector3(0.15, 0.15, 0.15);
     }
 
 }
