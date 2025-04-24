@@ -40,6 +40,7 @@ class Game {
         //Camera
         this.#gameCamera = new FreeCamera("freeCamera", new Vector3(5, 4, 5), GlobalManager.scene);
         this.#gameCamera.setTarget(Vector3.Zero());
+        this.#gameCamera.attachControl(this.#canvas, true);
 
         //Light
         const light = new HemisphericLight("hemisphericLight", new Vector3(0, 1, 0), GlobalManager.scene);

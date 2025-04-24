@@ -1,4 +1,4 @@
-import { Color3, ImportMeshAsync, MeshBuilder, PhysicsAggregate, PhysicsMotionType, PhysicsShapeType, PointLight, SceneLoader, ShadowGenerator, StandardMaterial, Texture, Tools, TransformNode, Vector3 } from "@babylonjs/core";
+import { Color3, ImportMeshAsync, MeshBuilder, ParticleSystem, PhysicsAggregate, PhysicsMotionType, PhysicsShapeType, PointLight, SceneLoader, ShadowGenerator, StandardMaterial, Texture, Tools, TransformNode, Vector3 } from "@babylonjs/core";
 import { GlobalManager } from "./GlobalManager";
 import floorLabo from "../assets/texture/gris.png";
 import doorMesh from "../assets/models/lab_door.glb";
@@ -261,6 +261,13 @@ class Labo {
         const map = resultMap.meshes[0];
         map.position = new Vector3(this.x, this.y+0.95, this.z);
         map.scaling = new Vector3(0.15, 0.15, 0.15);
+
+        //Particules portail
+        const jsonParticules = {"name":"CPU particle system","id":"default system","capacity":10000,"disposeOnStop":false,"manualEmitCount":-1,"emitter":[0,0,0],"particleEmitterType":{"type":"BoxParticleEmitter","direction1":[0,1,0],"direction2":[0,1,0],"minEmitBox":[-0.5,-0.5,-0.5],"maxEmitBox":[0.5,0.5,0.5]},"texture":{"tags":null,"url":"https://assets.babylonjs.com/core/textures/flare.png","uOffset":0,"vOffset":0,"uScale":1,"vScale":1,"uAng":0,"vAng":0,"wAng":0,"uRotationCenter":0.5,"vRotationCenter":0.5,"wRotationCenter":0.5,"homogeneousRotationInUVTransform":false,"isBlocking":true,"name":"https://assets.babylonjs.com/core/textures/flare.png","hasAlpha":false,"getAlphaFromRGB":false,"level":1,"coordinatesIndex":0,"optimizeUVAllocation":true,"coordinatesMode":0,"wrapU":1,"wrapV":1,"wrapR":1,"anisotropicFilteringLevel":4,"isCube":false,"is3D":false,"is2DArray":false,"gammaSpace":true,"invertZ":false,"lodLevelInAlpha":false,"lodGenerationOffset":0,"lodGenerationScale":0,"linearSpecularLOD":false,"isRenderTarget":false,"animations":[],"invertY":true,"samplingMode":3,"_useSRGBBuffer":false,"internalTextureLabel":"https://assets.babylonjs.com/core/textures/flare.png","noMipmap":false},"isLocal":false,"animations":[],"beginAnimationOnStart":false,"beginAnimationFrom":0,"beginAnimationTo":60,"beginAnimationLoop":false,"startDelay":0,"renderingGroupId":0,"isBillboardBased":true,"billboardMode":7,"minAngularSpeed":0,"maxAngularSpeed":0,"minSize":0.1,"maxSize":0.1,"minScaleX":1,"maxScaleX":1,"minScaleY":1,"maxScaleY":1,"minEmitPower":2,"maxEmitPower":2,"minLifeTime":1,"maxLifeTime":1.5,"emitRate":30,"gravity":[0,0,0],"noiseStrength":[10,10,10],"color1":[0.1450980392156863,0.1450980392156863,0.7333333333333333,1],"color2":[0.7294117647058823,0.27058823529411763,0.8549019607843137,1],"colorDead":[0,0,0,1],"updateSpeed":0.016666666666666666,"targetStopDuration":0,"blendMode":0,"preWarmCycles":0,"preWarmStepOffset":1,"minInitialRotation":0,"maxInitialRotation":0,"startSpriteCellID":0,"spriteCellLoop":true,"endSpriteCellID":0,"spriteCellChangeSpeed":1,"spriteCellWidth":0,"spriteCellHeight":0,"spriteRandomStartCell":false,"isAnimationSheetEnabled":false,"useLogarithmicDepth":false,"textureMask":[1,1,1,1],"customShader":null,"preventAutoStart":false,"worldOffset":[0,0,0]};
+        const particules = ParticleSystem.Parse(jsonParticules, GlobalManager.scene, "");
+        particules.particleEmitterType.minEmitBox.z = -1;
+        particules.particleEmitterType.maxEmitBox.z = 1;
+        particules.emitter = new Vector3(this.x-3, this.y, this.z+3.5);
     }
 
 }
