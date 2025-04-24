@@ -1,6 +1,6 @@
 import { Color3, ImportMeshAsync, MeshBuilder, ParticleSystem, PhysicsAggregate, PhysicsMotionType, PhysicsShapeType, PointLight, SceneLoader, ShadowGenerator, StandardMaterial, Texture, Tools, TransformNode, Vector3 } from "@babylonjs/core";
 import { GlobalManager } from "./GlobalManager";
-import floorLabo from "../assets/texture/gris.png";
+import floorLabo from "../assets/texture/sol_labo.png";
 import doorMesh from "../assets/models/lab_door.glb";
 import blackWindowMesh from "../assets/models/black_window.glb";
 import labLightMesh from "../assets/models/labo_light.glb";
@@ -35,6 +35,10 @@ class Labo {
         this.y = y;
         this.z = z;
 
+        //Sol
+        const ground = MeshBuilder.CreateGround("ground", { width: 20, height: 20}, GlobalManager.scene);
+        ground.position = new Vector3(0, -0.1, 0);
+
         let laboGround = MeshBuilder.CreateBox("laboGround", {width: GROUND_WIDTH, height: GROUND_HEIGHT, depth: GROUND_DEPTH}, GlobalManager.scene);
         laboGround.position = new Vector3(x, y, z);
         this.labo.push(laboGround);
@@ -46,11 +50,11 @@ class Labo {
         laboGround.material = matGround;
         laboGround.receiveShadows = true;
 
+        //Murs
         let rightWall = MeshBuilder.CreateBox("rightWal", {width: GROUND_HEIGHT, height: WALL_HEIGHT, depth: GROUND_DEPTH}, GlobalManager.scene);
         rightWall.parent = laboGround;
         rightWall.position = new Vector3(x+GROUND_WIDTH/2, y, z);
         const matWall = new StandardMaterial("matWall", GlobalManager.scene);
-        //matWall.diffuseColor = new Color3(1, 1, 1);
         matWall.emissiveColor = new Color3(0.4, 0.4, 0.4);
         rightWall.material = matWall;
         this.labo.push(rightWall);
@@ -73,17 +77,13 @@ class Labo {
         behindWall.material = matWall;
         this.labo.push(behindWall);
 
+        //Toit
         let laboRoof = MeshBuilder.CreateBox("laboGround", {width: GROUND_WIDTH, height: GROUND_HEIGHT, depth: GROUND_DEPTH}, GlobalManager.scene);
         laboRoof.parent = laboGround;
         laboRoof.position = new Vector3(x, y+WALL_HEIGHT/2, z);
         this.labo.push(laboRoof);
 
-        for(let wallsLabo of this.labo){
-            wallsLabo.refreshBoundingInfo(true);
-            const meshAggregate =  new PhysicsAggregate(wallsLabo, PhysicsShapeType.MESH, {mass:0, friction: 0.4, restitution : 0.1}); 
-            meshAggregate.body.setMotionType(PhysicsMotionType.STATIC);
-            wallsLabo.receiveShadows = true;
-        }
+        GlobalManager.addStaticPhysics(this.labo);
     }
 
     async init() {
@@ -267,6 +267,8 @@ class Labo {
         const particules = ParticleSystem.Parse(jsonParticules, GlobalManager.scene, "");
         particules.particleEmitterType.minEmitBox.z = -1;
         particules.particleEmitterType.maxEmitBox.z = 1;
+        particules.particleEmitterType.minEmitBox.x = -1;
+        particules.particleEmitterType.maxEmitBox.x = 1;
         particules.emitter = new Vector3(this.x-3, this.y, this.z+3.5);
     }
 

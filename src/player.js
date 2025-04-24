@@ -4,7 +4,6 @@ import { GlobalManager } from "./GlobalManager";
 
 const PLAYER_HEIGHT = 1.7;
 const PLAYER_RADIUS = 0.4;
-let IN_LABO = true;
 
 class Player {
 
@@ -14,7 +13,6 @@ class Player {
     //Mesh
     gameObject;
 
-
     //Animations
     animationsGroup;
     bWalking = false;
@@ -22,6 +20,7 @@ class Player {
     runAnim;
     walkAnim;
     runningSpeed = 2;
+    in_labo = false;
 
     //Position et vitesse
     x = 0.0;
@@ -54,7 +53,7 @@ class Player {
         this.gameObject.bakeCurrentTransformIntoVertices();
         this.gameObject.checkCollisions = true;
 
-        for(let playerMesh of result.meshes){
+        for (let playerMesh of result.meshes) {
             playerMesh.receiveShadows = true;
             playerMesh.castShadows = true;
             GlobalManager.addShadowCaster(playerMesh);
@@ -90,17 +89,17 @@ class Player {
         const camera = GlobalManager.scene.activeCamera;
         let move = Vector3.Zero();
 
-        if(inputMap["KeyW"])
+        if (inputMap["KeyW"])
             move.addInPlace(camera.getDirection(Axis.Z));
-        if(inputMap["KeyS"])
+        if (inputMap["KeyS"])
             move.addInPlace(camera.getDirection(Axis.Z).negate());
-        if(inputMap["KeyA"])
+        if (inputMap["KeyA"])
             move.addInPlace(camera.getDirection(Axis.X).negate());
-        if(inputMap["KeyD"])
+        if (inputMap["KeyD"])
             move.addInPlace(camera.getDirection(Axis.X));
 
         //Mouvement
-        if(move.length() > 0.1){
+        if (move.length() > 0.1) {
             move.normalize();
 
             this.speedX = move.x * this.runningSpeed;
@@ -108,8 +107,8 @@ class Player {
 
             const directionXZ = new Vector3(this.speedX, 0, this.speedZ);
             this.gameObject.lookAt(directionXZ.normalize());
-            if(!this.bWalking){
-                if(!IN_LABO){
+            if (!this.bWalking) {
+                if (!this.in_labo) {
                     this.runningSpeed = 6;
                     this.runAnim.start(true, 1.0, this.runAnim.from, this.runAnim.to, false);
                 } else {
@@ -122,7 +121,7 @@ class Player {
             //Arrêt du mouvement
             this.speedX += (-12.0 * this.speedX * delta);
             this.speedZ += (-12.0 * this.speedZ * delta);
-    
+
             //Arrêt
             if (this.bWalking) {
                 this.runAnim.stop();
@@ -138,8 +137,6 @@ class Player {
 
         // Appliquer la vitesse au corps
         this.capsuleAggregate.body.setLinearVelocity(currentVelocity);
-
-
     }
 
 }
