@@ -1,4 +1,4 @@
-import { ActionManager, ArcRotateCamera, Color3, Color4, FollowCamera, FreeCamera, HavokPlugin, HemisphericLight, InterpolateValueAction, KeyboardEventTypes, Mesh, MeshBuilder, ParticleSystem, PhysicsAggregate, PhysicsMotionType, PhysicsShapeType, PointLight, Scene, SetValueAction, ShadowGenerator, SpotLight, StandardMaterial, Texture, Tools, Vector3 } from "@babylonjs/core";
+import { ActionManager, ArcRotateCamera, Color3, Color4, FollowCamera, FreeCamera, HavokPlugin, HemisphericLight, InterpolateValueAction, KeyboardEventTypes, Mesh, MeshBuilder, ParticleSystem, PhysicsAggregate, PhysicsMotionType, PhysicsShapeType, PointerEventTypes, PointLight, Scene, SetValueAction, ShadowGenerator, SpotLight, StandardMaterial, Texture, Tools, Vector3 } from "@babylonjs/core";
 import { Inspector } from '@babylonjs/inspector';
 import HavokPhysics from "@babylonjs/havok";
 import Player from "./player.js";
@@ -16,9 +16,6 @@ class Game {
 
     #zaranthisCamera;
     #laboCamera;
-
-    #phase = 0.0;
-    #vitesseY = 1.8;
 
     #currentPlayer;
     #playerLabo;
@@ -48,31 +45,35 @@ class Game {
         const hk = new HavokPlugin(true, this.#havokInstance);
         GlobalManager.scene.enablePhysics(new Vector3(0, -9.8, 0), hk);
 
-        //Camera du labo
+        //Camera du laboratoire
         this.#laboCamera = new FreeCamera("freeCamera", new Vector3(5, 4, 5), GlobalManager.scene);
         this.#laboCamera.setTarget(Vector3.Zero());
         GlobalManager.scene.activeCamera = this.#laboCamera;
 
-        //Camera de zaranthis
+        //Camera de Zaranthis
         this.#zaranthisCamera = new FollowCamera("camera1", new Vector3(5000, 0, 0), GlobalManager.scene);
-        this.#zaranthisCamera.heightOffset = 4;
+        this.#zaranthisCamera.heightOffset = 2;
         this.#zaranthisCamera.radius = -8;
         this.#zaranthisCamera.maxCameraSpeed = 1;
         this.#zaranthisCamera.cameraAcceleration = 0.025;
         this.#zaranthisCamera.rotationOffset = 180;
-        this.#zaranthisCamera.attachControl(this.#canvas, true);
+        this.#zaranthisCamera.attachControl(this.#canvas, false, false, false);
+        this.#zaranthisCamera.checkCollisions = true;
+        this.#zaranthisCamera.ellipsoid = new Vector3(1, 1, 1);
+        this.#zaranthisCamera.ellipsoidOffset = new Vector3(0, 2, 0);
+        this.setupCameraMouseControl();
 
-        //Light
+        //Lumière
         const light = new HemisphericLight("hemisphericLight", new Vector3(0, 1, 0), GlobalManager.scene);
         light.intensity = 0.5;
 
-        //Zone de téléportation labo
+        //Zone de téléportation du laboratoire
         this.teleportZoneLabo = MeshBuilder.CreateBox("teleportZone", {width: 0.5, height: 4, depth: 1.5}, GlobalManager.scene);
         this.teleportZoneLabo.position = new Vector3(-3, 0, +3.5);
         this.teleportZoneLabo.checkCollisions = true;
         this.teleportZoneLabo.isVisible = false;
 
-        //Zone de téléportation Zaranthis
+        //Zone de téléportation de Zaranthis
         this.teleportZoneZaranthis = MeshBuilder.CreateBox("teleportZoneZaranthis", {width: 0.5, height: 4, depth: 1.5}, GlobalManager.scene);
         this.teleportZoneZaranthis.position = new Vector3(5004.4, 0, -0.5);
         this.teleportZoneZaranthis.rotation.y = Tools.ToRadians(-110);
@@ -140,18 +141,30 @@ class Game {
     }
 
     teleportToZaranthis() {
+        //Désactivation du parent du player du labo et activation du player de Zaranthis
         this.#playerLabo.transform.setEnabled(false);
         this.#playerZaranthis.transform.setEnabled(true);
+
+        //Changement du player courant
         this.#currentPlayer = this.#playerZaranthis;
+
+        //Changement de caméra courante
         this.#zaranthisCamera.lockedTarget = this.#playerZaranthis.transform;
         GlobalManager.scene.activeCamera = this.#zaranthisCamera;
+
+        //Permet d'éviter la téléportation infinie (une téléportation toutes les 2 secondes)
         this.teleportCooldown = 2;
     }
     
     teleportToLabo() {
+        //Désactivation du parent du player de Zaranthis et activation du player du labo
         this.#playerZaranthis.transform.setEnabled(false);
         this.#playerLabo.transform.setEnabled(true);
+
+        //Changement du player courant
         this.#currentPlayer = this.#playerLabo;
+
+        //Changement de caméra courante
         GlobalManager.scene.activeCamera = this.#laboCamera;
         //Permet d'éviter la téléportation infinie (une téléportation toutes les 2 secondes)
         this.teleportCooldown = 2;
@@ -168,7 +181,9 @@ class Game {
     }
 
     updateGame() {
+        //FPS
         let delta = this.#engine.getDeltaTime() / 1000.0;
+
         this.#currentPlayer.update(delta);
         //Vérifie si 2 secondes se sont écoulées depuis la dernière téléportation
         if (this.teleportCooldown > 0) {
@@ -176,6 +191,49 @@ class Game {
         } else {
             this.checkTeleportation();
         }
+    }
+
+    setupCameraMouseControl() {
+        let lastX = 0;
+        let lastY = 0;
+        let isFirstMove = true;
+        let verticalOffset = this.#zaranthisCamera.heightOffset;
+
+        const minOffset = 1;
+        const maxOffset = 3;
+
+        this.#canvas.addEventListener("pointermove", (evt) => {
+            if (isFirstMove) {
+                lastX = evt.clientX;
+                lastY = evt.clientY;
+                isFirstMove = false;
+                return;
+            }
+
+            const deltaX = evt.clientX - lastX;
+            const deltaY = evt.clientY - lastY;
+
+            // Seulement appliquer le changement si le mouvement est significatif
+            if (Math.abs(deltaX) > 0.5) {
+                this.#zaranthisCamera.rotationOffset += deltaX * 0.5;
+            }
+
+            if (Math.abs(deltaY) > 0.5) {
+                verticalOffset -= deltaY * 0.1;
+                verticalOffset = Math.max(minOffset, Math.min(maxOffset, verticalOffset));
+                this.#zaranthisCamera.heightOffset = verticalOffset;
+            }
+            lastX = evt.clientX;
+            lastY = evt.clientY;
+        });
+
+        this.#canvas.addEventListener("pointerout", () => {
+            isFirstMove = true;
+        });
+
+        this.#canvas.addEventListener("pointerenter", () => {
+            isFirstMove = true;
+        });
     }
 
 
