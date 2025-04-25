@@ -35,6 +35,7 @@ class Labo {
         this.y = y;
         this.z = z;
 
+        //Création des murs du laboratoire
         //Sol
         const ground = MeshBuilder.CreateGround("ground", { width: 20, height: 20}, GlobalManager.scene);
         ground.position = new Vector3(0, -0.1, 0);
@@ -87,6 +88,7 @@ class Labo {
     }
 
     async init() {
+        //Importation de tous les Mesh du laboratoire
         //Porte
         const resultDoor = await SceneLoader.ImportMeshAsync("", "", doorMesh, GlobalManager.scene);
         const door = resultDoor.meshes[0];
@@ -112,7 +114,7 @@ class Labo {
         const labLight = resultLight.meshes[0];
         labLight.position = new Vector3(this.x, this.y+2.8, this.z);
         labLight.scaling = new Vector3(0.1, 0.1, 0.1);
-        //Lumière
+        //Lumière sur le lustre
         const lustreLight = new PointLight("lustreLight", Vector3.Zero(), GlobalManager.scene);
         lustreLight.intensity = 0.5;
         lustreLight.range = 10

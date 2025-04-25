@@ -19,12 +19,10 @@ class InputController {
             switch (kbInfo.type) {
                 case KeyboardEventTypes.KEYDOWN:
                     this.inputMap[kbInfo.event.code] = true;
-                    console.log(`KEY DOWN: ${kbInfo.event.code} / ${kbInfo.event.key}`);
                     break;
                 case KeyboardEventTypes.KEYUP:
                     this.inputMap[kbInfo.event.code] = false;
                     this.actions[kbInfo.event.code] = true;
-                    console.log(`KEY UP: ${kbInfo.event.code} / ${kbInfo.event.key}`);
                     break;
             }
         });
