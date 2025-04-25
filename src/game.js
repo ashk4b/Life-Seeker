@@ -25,8 +25,8 @@ class Game {
     #zaranthis;
 
     teleportZoneLabo;
+    teleportZoneZaranthis;
 
-    isPlayerReady = true;
 
     constructor(canvas, engine) {
         this.#canvas = canvas;
@@ -49,7 +49,7 @@ class Game {
         this.#laboCamera = new FreeCamera("freeCamera", new Vector3(5, 4, 5), GlobalManager.scene);
         this.#laboCamera.setTarget(Vector3.Zero());
         this.#laboCamera.attachControl(this.#canvas, true);
-        GlobalManager.scene.activeCamera = this.#laboCamera;
+        //GlobalManager.scene.activeCamera = this.#laboCamera;
 
         //Camera de zaranthis
         this.#zaranthisCamera = new FollowCamera("camera1", new Vector3(5000, 0, 0), GlobalManager.scene);
@@ -59,14 +59,20 @@ class Game {
         this.#zaranthisCamera.cameraAcceleration = 0.025;
         this.#zaranthisCamera.rotationOffset = 180;
         this.#zaranthisCamera.attachControl(this.#canvas, true);
+        GlobalManager.scene.activeCamera = this.#zaranthisCamera;
 
         //Light
         const light = new HemisphericLight("hemisphericLight", new Vector3(0, 1, 0), GlobalManager.scene);
         light.intensity = 0.5;
 
-        //Zone de téléportation
-        this.teleportZoneLabo = MeshBuilder.CreateBox("teleportZone", { width: 0.5, height: 4, depth: 1.5 }, GlobalManager.scene);
+        //Zone de téléportation labo
+        this.teleportZoneLabo = MeshBuilder.CreateBox("teleportZone", {width: 0.5, height: 4, depth: 1.5}, GlobalManager.scene);
         this.teleportZoneLabo.position = new Vector3(-3, 0, +3.5);
+
+        //Zone de téléportation Zaranthis
+        this.teleportZoneZaranthis = MeshBuilder.CreateBox("teleportZoneZaranthis", {width: 0.5, height: 4, depth: 1.5}, GlobalManager.scene);
+        this.teleportZoneZaranthis.position = new Vector3(5004.4, 0, -0.5);
+        this.teleportZoneZaranthis.rotation.y = Tools.ToRadians(-110);
 
         
     }
@@ -86,11 +92,11 @@ class Game {
         this.#labo = new Labo(0, 0, 0);
         await this.#labo.init();
 
-        //this.#zaranthis = new Zaranthis(5000, 0, 0);
-        //await this.#zaranthis.init();
+        this.#zaranthis = new Zaranthis(5000, 0, 0);
+        await this.#zaranthis.init();
 
-        this.#player = new Player(-3, 1, -4);
-        //this.#player = new Player(5000, 0, 0);
+        //this.#player = new Player(-3, 1, -4);
+        this.#player = new Player(5000, 0, 0);
         await this.#player.init();
         this.#zaranthisCamera.lockedTarget = this.#player.transform;
         GlobalManager.addShadowCaster(this.#player.gameObject);
@@ -126,6 +132,8 @@ class Game {
         let delta = this.#engine.getDeltaTime() / 1000.0;
         this.#player.update(InputController.inputMap, InputController.actions, delta);
     }
+
+
 }
 
 export default Game;
