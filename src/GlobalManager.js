@@ -7,14 +7,19 @@ class GlobalManager {
     camera;
 
     gameState;
+    
 
     shadowGenerators = [];
+    plantesRamassables = [];
+
 
     static get instance() {
         return (globalThis[Symbol.for(`PF_${GlobalManager.name}`)] ||= new this());
     }
 
     constructor() {
+        this.analysisDesk = null; 
+
 
     }
 

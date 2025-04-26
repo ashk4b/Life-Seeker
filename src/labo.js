@@ -211,6 +211,7 @@ class Labo {
         }
         deskParent.rotation.y = Tools.ToRadians(-90);
         GlobalManager.addStaticPhysics(resultDesk.meshes);
+        GlobalManager.analysisDesk = desk;
 
         //Poubelle
         const resultBin = await SceneLoader.ImportMeshAsync("", "", trashBinMesh, GlobalManager.scene);

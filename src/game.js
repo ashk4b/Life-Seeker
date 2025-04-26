@@ -6,6 +6,10 @@ import { GlobalManager } from "./GlobalManager";
 import { InputController } from "./InputController";
 import Labo from "./labo.js";
 import Zaranthis from "./zaranthis.js";
+import { Inventory } from "./Inventory.js";
+import * as GUI from "@babylonjs/gui";
+
+
 
 class Game {
 
@@ -16,6 +20,8 @@ class Game {
 
     #zaranthisCamera;
     #laboCamera;
+    #inventory;
+
 
     #currentPlayer;
     #playerLabo;
@@ -68,17 +74,25 @@ class Game {
         light.intensity = 0.5;
 
         //Zone de téléportation du laboratoire
-        this.teleportZoneLabo = MeshBuilder.CreateBox("teleportZone", {width: 0.5, height: 4, depth: 1.5}, GlobalManager.scene);
+        this.teleportZoneLabo = MeshBuilder.CreateBox("teleportZone", { width: 0.5, height: 4, depth: 1.5 }, GlobalManager.scene);
         this.teleportZoneLabo.position = new Vector3(-3, 0, +3.5);
         this.teleportZoneLabo.checkCollisions = true;
         this.teleportZoneLabo.isVisible = false;
 
         //Zone de téléportation de Zaranthis
-        this.teleportZoneZaranthis = MeshBuilder.CreateBox("teleportZoneZaranthis", {width: 0.5, height: 4, depth: 1.5}, GlobalManager.scene);
+        this.teleportZoneZaranthis = MeshBuilder.CreateBox("teleportZoneZaranthis", { width: 0.5, height: 4, depth: 1.5 }, GlobalManager.scene);
         this.teleportZoneZaranthis.position = new Vector3(5004.4, 0, -0.5);
         this.teleportZoneZaranthis.rotation.y = Tools.ToRadians(-110);
         this.teleportZoneZaranthis.checkCollisions = true;
         this.teleportZoneZaranthis.isVisible = false;
+
+        GlobalManager.scene.onKeyboardObservable.add((kbInfo) => {
+            if (kbInfo.type === KeyboardEventTypes.KEYUP) {
+                if (kbInfo.event.key === "a") {
+                    this.#inventory.basculerAffichage();
+                }
+            }
+        });
     }
 
     async getInitializedHavok() {
@@ -94,6 +108,51 @@ class Game {
         GlobalManager.scene.collisionsEnabled = true;
         InputController.init();
         this.createScene();
+        this.#inventory = new Inventory(GlobalManager.scene);
+        this.pickupUI = GUI.AdvancedDynamicTexture.CreateFullscreenUI("pickupUI", true, GlobalManager.scene);
+
+        this.pickupText = new GUI.TextBlock();
+        this.pickupText.text = "Appuyez sur E pour ramasser";
+        this.pickupText.color = "white";
+        this.pickupText.fontSize = 24;
+        this.pickupText.paddingBottom = 100; // Ajoute de l'espace en bas
+        this.pickupText.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_BOTTOM; // Très important
+        this.pickupText.textHorizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+        this.pickupText.isVisible = false;
+        this.pickupUI.addControl(this.pickupText);
+        // Interface pour l'analyse
+        this.analyseUI = GUI.AdvancedDynamicTexture.CreateFullscreenUI("analyseUI", true, GlobalManager.scene);
+
+        // Texte "Analyse en cours..."
+        this.analyseResultText = new GUI.TextBlock();
+        this.analyseResultText.text = "Analyse en cours...";
+        this.analyseResultText.color = "white";
+        this.analyseResultText.fontSize = 28;
+        this.analyseResultText.isVisible = false;
+        this.analyseResultText.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_CENTER;
+        this.analyseUI.addControl(this.analyseResultText);
+
+        // Barre de fond
+        this.progressBarBackground = new GUI.Rectangle();
+        this.progressBarBackground.width = "50%";
+        this.progressBarBackground.height = "40px";
+        this.progressBarBackground.cornerRadius = 10;
+        this.progressBarBackground.color = "white";
+        this.progressBarBackground.background = "black";
+        this.progressBarBackground.isVisible = false;
+        this.progressBarBackground.thickness = 2;
+        this.progressBarBackground.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_CENTER;
+        this.progressBarBackground.top = "50px"; // un peu plus bas que le texte
+        this.analyseUI.addControl(this.progressBarBackground);
+
+        // Barre de progression
+        this.progressBarFill = new GUI.Rectangle();
+        this.progressBarFill.height = "100%";
+        this.progressBarFill.width = "0%";
+        this.progressBarFill.cornerRadius = 10;
+        this.progressBarFill.color = "white";
+        this.progressBarFill.background = "green";
+        this.progressBarBackground.addControl(this.progressBarFill);
 
         //Instanciation du laboratoire
         this.#labo = new Labo(0, 0, 0);
@@ -115,7 +174,7 @@ class Game {
         this.#playerZaranthis.in_labo = false;
         GlobalManager.addShadowCaster(this.#playerZaranthis.gameObject);
         this.#zaranthisCamera.lockedTarget = this.#playerZaranthis.transform;
-        
+
     }
 
     endGame() {
@@ -155,7 +214,7 @@ class Game {
         //Permet d'éviter la téléportation infinie (une téléportation toutes les 2 secondes)
         this.teleportCooldown = 2;
     }
-    
+
     teleportToLabo() {
         //Désactivation du parent du player de Zaranthis et activation du player du labo
         this.#playerZaranthis.transform.setEnabled(false);
@@ -168,7 +227,7 @@ class Game {
         GlobalManager.scene.activeCamera = this.#laboCamera;
         //Permet d'éviter la téléportation infinie (une téléportation toutes les 2 secondes)
         this.teleportCooldown = 2;
-    }    
+    }
 
     checkTeleportation() {
         //Méthode qui vérifie si le joueur rentre dans le téléporteur
@@ -180,18 +239,83 @@ class Game {
         }
     }
 
-    updateGame() {
-        //FPS
-        let delta = this.#engine.getDeltaTime() / 1000.0;
+    lancerAnalyse() {
+        this.analyseEnCours = true;
+    
+        this.analyseResultText.isVisible = true;
+        this.progressBarBackground.isVisible = true;
+        this.progressBarFill.width = "0%";
+    
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += 2;
+            this.progressBarFill.width = `${progress}%`;
+    
+            if (progress >= 100) {
+                clearInterval(interval);
+    
+                setTimeout(() => {
+                    this.analyseResultText.isVisible = false;
+                    this.progressBarBackground.isVisible = false;
+                    this.analyseEnCours = false;
+                }, 500);
+            }
+        }, 40);
+    }
+    
 
+    updateGame() {
+        let delta = this.#engine.getDeltaTime() / 1000.0;
         this.#currentPlayer.update(delta);
-        //Vérifie si 2 secondes se sont écoulées depuis la dernière téléportation
+    
         if (this.teleportCooldown > 0) {
-            this.teleportCooldown -= this.#engine.getDeltaTime() / 1000;
+            this.teleportCooldown -= delta;
         } else {
             this.checkTeleportation();
         }
+    
+        // ----------- Gestion du ramassage de plantes
+        let nearPlant = false;
+        if (GlobalManager.plantesRamassables?.length && this.#currentPlayer?.transform?.position) {
+            for (let i = 0; i < GlobalManager.plantesRamassables.length; i++) {
+                const plante = GlobalManager.plantesRamassables[i];
+                const distance = Vector3.Distance(plante.position, this.#currentPlayer.transform.position);
+    
+                if (distance < 2.5) {
+                    this.pickupText.text = "Appuyez sur E pour ramasser la plante";
+                    this.pickupText.isVisible = true;
+                    nearPlant = true;
+    
+                    if (InputController.actions["KeyE"]) {
+                        this.#inventory.ajouterObjet("Plante de Zaranthis 🌿");
+                        plante.setEnabled(false);
+                        GlobalManager.plantesRamassables.splice(i, 1);
+                        this.pickupText.isVisible = false;
+                        break;
+                    }
+                }
+            }
+        }
+        if (!nearPlant) {
+            this.pickupText.isVisible = false;
+        }
+    
+        // ----------- Analyse au bureau (en DEHORS de la boucle)
+        if (GlobalManager.analysisDesk && this.#currentPlayer?.transform?.position) {
+            const deskPos = GlobalManager.analysisDesk.getAbsolutePosition();
+            const distance = Vector3.Distance(
+                new Vector3(deskPos.x, 0, deskPos.z),
+                new Vector3(this.#currentPlayer.transform.position.x, 0, this.#currentPlayer.transform.position.z)
+            );
+    
+            if (distance < 2.2) {
+                if (InputController.actions["KeyF"] && !this.analyseEnCours) {
+                    this.lancerAnalyse();
+                }
+            }
+        }
     }
+    
 
     setupCameraMouseControl() {
         let lastX = 0;
